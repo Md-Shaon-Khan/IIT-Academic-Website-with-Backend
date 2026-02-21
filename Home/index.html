@@ -16,7 +16,8 @@
       rel="stylesheet"
     />
 
-    
+    <link rel="stylesheet" href="sidebar.css">
+    <link rel="stylesheet" href="nav_foot.css" />
     <link rel="stylesheet" href="style.css" />
 
     <link
@@ -26,12 +27,12 @@
 
     
     <script defer src="script.js"></script>
-    <link rel="stylesheet" href="script.js" />
   </head>
   <body>
     
     <a class="skip-link" href="#main-content">Skip to main content</a>
-
+    
+    <div id="sidebar"> </div>
     <!-- Page wrapper to help layer hero background and overlays -->
     <div class="page">
       <!-- Header / Transparent top navigation over hero background -->
@@ -361,7 +362,7 @@
           </ul>
         </nav>
       </header>
-
+      
       <!-- Hero section with Earth-at-night background -->
       <main id="main-content" class="main" tabindex="-1">
         <section
@@ -400,7 +401,7 @@
         </section>
 
        
-        <section class="discover">
+        <section id="explore" class="discover">
           <!-- Content container for text and button -->
           <div class="discover__content container">
             <!-- Section Title -->
@@ -431,7 +432,7 @@
 
         <!--About Section-->
        
-        <section class="about" >
+        <section id="about" class="about" >
           <div class="about__container">
             <!-- Section Title -->
             <h2 class="about__title">About</h2>
@@ -484,7 +485,7 @@
 
      
         <!--FAQS-->
-        <section class="faqs">
+        <section id="faq" class="faqs">
           <div class="faqs__container">
             <!-- Left Column: Title + FAQs -->
             <div class="faqs__left">
@@ -542,6 +543,7 @@
         <div class="divider">
           
         </div>
+
       </main>
 
       <footer class="iit-footer">
@@ -621,5 +623,16 @@
       JavaScript is not required to use the Explore panel. Navigation remains
       accessible.
     </div>
+
+    <script>
+      fetch('sidebar.html')
+        .then(response => {
+          if (!response.ok) throw new Error('Sidebar fetch failed: ' + response.status);
+          return response.text();
+        })
+        .then(html => document.getElementById('sidebar').innerHTML = html)
+        .catch(err => console.error('sidebar load error:', err));
+
+    </script>
   </body>
 </html>
