@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+from sqlalchemy import or_ # মাল্টিপল কলামে সার্চ করার জন্য এটি প্রয়োজন
 import shutil, os, uuid
 from . import models, database
 
@@ -19,6 +20,8 @@ models.Base.metadata.create_all(bind=database.engine)
 if not os.path.exists("uploads"):
     os.makedirs("uploads")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+# --- ENDPOINTS ---
 
 @app.post("/upload-project/")
 async def upload_project(
@@ -65,9 +68,54 @@ async def upload_project(
 def get_projects(batch_id: str, db: Session = Depends(database.get_db)):
     return db.query(models.Project).filter(models.Project.batch == batch_id).all()
 
+# --- নতুন গ্লোবাল সার্চ এন্ডপয়েন্ট ---
+@app.get("/search-projects/")
+def search_projects(query: str, db: Session = Depends(database.get_db)):
+    """
+    পুরো ডাটাবেস থেকে প্রজেক্ট সার্চ করার জন্য এন্ডপয়েন্ট। 
+    এটি প্রজেক্টের নাম, বর্ণনা বা ব্যাচ নম্বর দিয়ে সার্চ করতে পারে।
+    """
+    search_query = f"%{query}%"
+    results = db.query(models.Project).filter(
+        or_(
+            models.Project.project_name.ilike(search_query),
+            models.Project.introduction.ilike(search_query),
+            models.Project.batch.ilike(search_query) # ইউজার ব্যাচ নম্বর দিয়েও সার্চ করতে পারবে
+        )
+    ).all()
+    return results
+
 @app.get("/get-project-detail/{project_id}")
 def get_detail(project_id: int, db: Session = Depends(database.get_db)):
     project = db.query(models.Project).filter(models.Project.id == project_id).first()
     images = db.query(models.ProjectImage).filter(models.ProjectImage.project_id == project_id).all()
     if not project: raise HTTPException(status_code=404, detail="Not found")
     return {"project": project, "related_images": images}
+
+@app.delete("/delete-project/{project_id}")
+async def delete_project(project_id: int, db: Session = Depends(database.get_db)):
+    # ১. ডাটাবেসে প্রজেক্টটি আছে কি না চেক করা
+    project = db.query(models.Project).filter(models.Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    try:
+        # ২. সম্পর্কিত ইমেজ ফাইলগুলো লোকাল স্টোরেজ থেকে ডিলিট করা
+        images = db.query(models.ProjectImage).filter(models.ProjectImage.project_id == project_id).all()
+        for img in images:
+            if os.path.exists(img.image_path):
+                os.remove(img.image_path)
+        
+        # ৩. মেইন কভার ইমেজটি ডিলিট করা
+        if os.path.exists(project.image_path):
+            os.remove(project.image_path)
+
+        # ৪. ডাটাবেস থেকে রেকর্ডগুলো মুছে ফেলা
+        db.query(models.ProjectImage).filter(models.ProjectImage.project_id == project_id).delete()
+        db.delete(project)
+        db.commit()
+        
+        return {"status": "success", "message": "Project deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))

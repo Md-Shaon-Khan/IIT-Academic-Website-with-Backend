@@ -1,40 +1,157 @@
+/* --- Global Layout & Sticky Footer --- */
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+/* লোগোকে বামে সরানো এবং বড় করা */
+.navbar-brand img {
+  height: 55px; /* বর্তমান সাইজ থেকে বাড়িয়ে ৫৫ পিক্সেল করা হয়েছে */
+  margin-left: -20px; /* লোগোকে বামে ১০ পিক্সেল সরিয়ে আনা হয়েছে */
+  transition: transform 0.3s ease; /* স্মুথ ট্রানজিশনের জন্য */
+}
+
+/* মাউস হোভার করলে লোগোটি সামান্য ইফেক্ট দেবে (ঐচ্ছিক) */
+.navbar-brand:hover img {
+  transform: scale(1.05);
+}
+
+/* নিশ্চিত করতে যে কন্টেইনারের প্যাডিং লোগোকে আটকে না রাখে */
+.navbar .container {
+  padding-left: 10px; /* কন্টেইনারের বাম পাশের গ্যাপ কমানো হয়েছে */
+}
+
 body {
   background-color: #f8fafd;
-  padding-top: 20px;
   display: flex;
   flex-direction: column;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
+
+/* মেইন কন্টেন্ট যতটুকু জায়গা খালি আছে তা দখল করবে */
 main,
 .container.py-5 {
   flex: 1 0 auto;
+  padding-top: 80px; /* Navbar এর জন্য স্পেস */
 }
+
+#footer-placeholder {
+  flex-shrink: 0;
+}
+
+/* --- Navbar & Search Styling --- */
+.navbar {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(5px);
+}
+
+#globalSearchInput {
+  border-radius: 20px 0 0 20px;
+  border: 1px solid #ddd;
+  padding-left: 20px;
+  transition: all 0.3s ease;
+}
+
+#globalSearchInput:focus {
+  box-shadow: none;
+  border-color: #11446c;
+}
+
+.input-group .btn-primary {
+  border-radius: 0 20px 20px 0;
+  padding: 0 25px;
+  background-color: #11446c;
+}
+
+/* --- Typography & Accents --- */
 .section-title {
   color: #11446c;
   font-weight: 800;
 }
+
 .title-underline {
-  width: 50px;
-  height: 3px;
+  width: 60px;
+  height: 4px;
   background: #11446c;
   border: none;
   opacity: 1;
+  border-radius: 10px;
+  margin-top: 5px;
 }
+
+/* --- Project Card Styling --- */
 .project-card {
-  border-radius: 12px;
+  border: none;
+  border-radius: 15px;
   overflow: hidden;
-  transition: transform 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
   background: #fff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
+
 .project-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
 }
+
+.project-card img {
+  transition: transform 0.5s ease;
+}
+
+.project-card:hover img {
+  transform: scale(1.05);
+}
+
+/* --- Buttons --- */
 .btn-primary {
   background-color: #11446c;
   border: none;
+  font-weight: 600;
+  transition: background 0.3s;
 }
+
+.btn-primary:hover {
+  background-color: #0d3452;
+}
+
+/* --- Footer --- */
 footer {
   background-color: #1a1a1a;
+  color: #ffffff;
+  padding: 25px 0;
+  text-align: center;
 }
-#footer-placeholder {
-  flex-shrink: 0;
+
+.footer-wrapper p {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* --- Animation --- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#projects-container .col-md-6 {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.navbar-brand img {
+  height: 58px !important; /* লোগোর সাইজ বাড়ানো হয়েছে */
+  margin-left: -12px !important; /* লোগোকে বামে ১০-১২ পিক্সেল সরানো হয়েছে */
+  object-fit: contain;
+}
+
+/* কন্টেইনারের বাম পাশের গ্যাপ কমানো */
+.navbar > .container {
+  padding-left: 0px !important;
 }

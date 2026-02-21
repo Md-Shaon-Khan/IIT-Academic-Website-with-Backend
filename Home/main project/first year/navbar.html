@@ -1,8 +1,9 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
   <div class="container">
     <a class="navbar-brand" href="../../index.html">
-      <img src="images/iit-logo cropped.png" alt="Logo" height="45" />
+      <img src="images/iit-logo cropped.png" alt="Logo" height="55" />
     </a>
+
     <button
       class="navbar-toggler"
       type="button"
@@ -11,7 +12,36 @@
     >
       <span class="navbar-toggler-icon"></span>
     </button>
+
     <div class="collapse navbar-collapse" id="mainNav">
+      <div
+        class="d-flex mx-auto mt-2 mt-lg-0"
+        style="max-width: 400px; width: 100%"
+      >
+        <div class="input-group">
+          <input
+            type="text"
+            id="globalSearchInput"
+            class="form-control"
+            placeholder="Search projects by name or batch..."
+            aria-label="Search"
+            style="border-radius: 20px 0 0 20px"
+          />
+          <button
+            class="btn btn-primary"
+            type="button"
+            onclick="performGlobalSearch()"
+            style="
+              border-radius: 0 20px 20px 0;
+              background-color: #11446c;
+              border: none;
+            "
+          >
+            <i class="fa fa-search"></i> Search
+          </button>
+        </div>
+      </div>
+
       <ul class="navbar-nav ms-auto align-items-center">
         <li class="nav-item dropdown">
           <a
@@ -22,7 +52,7 @@
           >
             First Year Projects
           </a>
-          <ul class="dropdown-menu">
+          <ul class="dropdown-menu shadow border-0">
             <li>
               <a class="dropdown-item" href="index.html?batch=52">Batch 52</a>
             </li>
