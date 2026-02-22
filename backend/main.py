@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from sqlalchemy import or_ # মাল্টিপল কলামে সার্চ করার জন্য এটি প্রয়োজন
+from sqlalchemy import or_ 
 import shutil, os, uuid
 from . import models, database
 
@@ -25,29 +25,46 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 @app.post("/upload-project/")
 async def upload_project(
-    batch: str = Form(...), name: str = Form(...), intro: str = Form(...),
-    problem: str = Form(...), features: str = Form(...), tools: str = Form(...),
-    impact: str = Form(...), supervisor: str = Form(...), team: str = Form(...),
+    batch: str = Form(...), 
+    name: str = Form(...), 
+    intro: str = Form(...),
+    problem: str = Form(...), 
+    features: str = Form(...), 
+    tools: str = Form(...),
+    impact: str = Form(...), 
+    supervisor: str = Form(...), 
+    team: str = Form(...),
+    github_link: str = Form(None), # New Field Added
     image: UploadFile = File(...), 
     related_images: list[UploadFile] = File(None), 
     db: Session = Depends(database.get_db)
 ):
     try:
+        # Save Cover Image
         ext = image.filename.split(".")[-1]
         unique_cover = f"{uuid.uuid4()}.{ext}"
         cover_path = f"uploads/{unique_cover}"
         with open(cover_path, "wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
 
+        # Create Project Record
         new_project = models.Project(
-            batch=batch, project_name=name, introduction=intro,
-            problem_statement=problem, features=features, tools_tech=tools,
-            impact=impact, supervisor=supervisor, team_members=team,
-            image_path=cover_path
+            batch=batch, 
+            project_name=name, 
+            introduction=intro,
+            problem_statement=problem, 
+            features=features, 
+            tools_tech=tools,
+            impact=impact, 
+            supervisor=supervisor, 
+            team_members=team,
+            image_path=cover_path,
+            github_link=github_link # Saved to DB
         )
         db.add(new_project)
         db.flush() 
 
+        # Save Gallery Images
         if related_images:
             for img in related_images:
                 if img.filename:
@@ -68,19 +85,14 @@ async def upload_project(
 def get_projects(batch_id: str, db: Session = Depends(database.get_db)):
     return db.query(models.Project).filter(models.Project.batch == batch_id).all()
 
-# --- নতুন গ্লোবাল সার্চ এন্ডপয়েন্ট ---
 @app.get("/search-projects/")
 def search_projects(query: str, db: Session = Depends(database.get_db)):
-    """
-    পুরো ডাটাবেস থেকে প্রজেক্ট সার্চ করার জন্য এন্ডপয়েন্ট। 
-    এটি প্রজেক্টের নাম, বর্ণনা বা ব্যাচ নম্বর দিয়ে সার্চ করতে পারে।
-    """
     search_query = f"%{query}%"
     results = db.query(models.Project).filter(
         or_(
             models.Project.project_name.ilike(search_query),
             models.Project.introduction.ilike(search_query),
-            models.Project.batch.ilike(search_query) # ইউজার ব্যাচ নম্বর দিয়েও সার্চ করতে পারবে
+            models.Project.batch.ilike(search_query) 
         )
     ).all()
     return results
@@ -94,23 +106,22 @@ def get_detail(project_id: int, db: Session = Depends(database.get_db)):
 
 @app.delete("/delete-project/{project_id}")
 async def delete_project(project_id: int, db: Session = Depends(database.get_db)):
-    # ১. ডাটাবেসে প্রজেক্টটি আছে কি না চেক করা
     project = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
     try:
-        # ২. সম্পর্কিত ইমেজ ফাইলগুলো লোকাল স্টোরেজ থেকে ডিলিট করা
+        # Delete related images from disk
         images = db.query(models.ProjectImage).filter(models.ProjectImage.project_id == project_id).all()
         for img in images:
             if os.path.exists(img.image_path):
                 os.remove(img.image_path)
         
-        # ৩. মেইন কভার ইমেজটি ডিলিট করা
+        # Delete cover image from disk
         if os.path.exists(project.image_path):
             os.remove(project.image_path)
 
-        # ৪. ডাটাবেস থেকে রেকর্ডগুলো মুছে ফেলা
+        # Delete from DB
         db.query(models.ProjectImage).filter(models.ProjectImage.project_id == project_id).delete()
         db.delete(project)
         db.commit()

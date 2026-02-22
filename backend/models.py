@@ -16,6 +16,7 @@ class Project(Base):
     supervisor = Column(String(100))
     team_members = Column(Text)
     image_path = Column(String(255))
+    github_link = Column(String(255), nullable=True)  # New Field Added
     created_at = Column(DateTime, default=datetime.utcnow)
 
 class ProjectImage(Base):

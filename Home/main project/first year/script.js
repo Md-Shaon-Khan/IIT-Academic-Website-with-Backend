@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!batchId) {
         document.getElementById('projects-container').innerHTML = `
             <div class="col-12 text-center py-5">
-                <h3>Please select a batch or use the search bar to find projects.</h3>
+                <h3 style="color: #11446c;">Please select a batch or use the search bar to find projects.</h3>
             </div>`;
         document.getElementById('batch-label').innerText = "Select Batch";
         return;
@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadProjects(batch) {
     const API_BASE = "http://127.0.0.1:8000";
     const container = document.getElementById("projects-container");
-    container.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>`;
+    container.innerHTML = `<div class="text-center py-5"><div class="spinner-border" style="color: #11446c;"></div></div>`;
     
     try {
         const res = await fetch(`${API_BASE}/get-projects/${batch}`);
@@ -59,7 +59,7 @@ async function performGlobalSearch() {
     const label = document.getElementById('batch-label');
 
     label.innerText = `Search Results for: "${query}"`;
-    container.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>`;
+    container.innerHTML = `<div class="text-center py-5"><div class="spinner-border" style="color: #11446c;"></div></div>`;
 
     try {
         const res = await fetch(`${API_BASE}/search-projects/?query=${encodeURIComponent(query)}`);
@@ -70,18 +70,19 @@ async function performGlobalSearch() {
     }
 }
 
-// কার্ড রেন্ডার করার জন্য একটি মাত্র ফাংশন
+// কার্ড রেন্ডার করার ফাংশন
 function displayProjects(projects) {
     const container = document.getElementById("projects-container");
     const API_BASE = "http://127.0.0.1:8000";
     container.innerHTML = "";
 
     if (!projects || projects.length === 0) {
-        container.innerHTML = `<div class="col-12 text-center py-5"><h3>No projects found.</h3></div>`;
+        container.innerHTML = `<div class="col-12 text-center py-5"><h3 style="color: #11446c;">No projects found.</h3></div>`;
         return;
     }
 
     projects.forEach(p => {
+        // Windows এবং Linux পাথ ফরম্যাট হ্যান্ডেল করা
         const imgPath = p.image_path.replace(/\\/g, '/');
         
         container.innerHTML += `
@@ -89,14 +90,14 @@ function displayProjects(projects) {
                 <div class="card h-100 shadow-sm border-0 project-card" style="border-radius: 15px; overflow: hidden;">
                     <div class="row g-0 h-100">
                         <div class="col-7 p-4 d-flex flex-column">
-                            <h5 class="fw-bold text-primary">${p.project_name}</h5>
+                            <h5 class="fw-bold" style="color: #11446c !important;">${p.project_name}</h5>
                             <p class="text-muted small mb-1"><strong>Batch:</strong> ${p.batch}</p>
                             <p class="text-muted small mb-3">${p.introduction.substring(0, 100)}...</p>
                             
                             <div class="mt-auto">
                                 <p class="small mb-1 text-secondary"><strong>Supervisor:</strong> ${p.supervisor}</p>
                                 <div class="d-flex gap-2 mt-2">
-                                    <a href="project_details.html?id=${p.id}" class="btn btn-primary btn-sm px-3" style="border-radius: 20px;">Details</a>
+                                    <a href="project_details.html?id=${p.id}" class="btn btn-primary btn-sm px-4" style="border-radius: 20px; background-color: #11446c; border: none;">Details</a>
                                     <button onclick="confirmDelete(${p.id})" class="btn btn-outline-danger btn-sm px-3" style="border-radius: 20px;">
                                         <i class="fa fa-trash"></i> Delete
                                     </button>
@@ -104,7 +105,7 @@ function displayProjects(projects) {
                             </div>
                         </div>
                         <div class="col-5">
-                            <img src="${API_BASE}/${imgPath}" class="img-fluid h-100 w-100" style="object-fit: cover; min-height: 200px;">
+                            <img src="${API_BASE}/${imgPath}" class="img-fluid h-100 w-100" style="object-fit: cover; min-height: 220px;">
                         </div>
                     </div>
                 </div>
@@ -122,7 +123,8 @@ async function confirmDelete(projectId) {
                 const res = await fetch(`${API_BASE}/delete-project/${projectId}`, { method: 'DELETE' });
                 if (res.ok) {
                     alert("Project deleted successfully!");
-                    document.getElementById(`project-card-${projectId}`).remove(); 
+                    const card = document.getElementById(`project-card-${projectId}`);
+                    if(card) card.remove(); 
                 } else {
                     alert("Failed to delete.");
                 }
