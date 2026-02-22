@@ -308,26 +308,35 @@ section.visible {
   flex-wrap: wrap;
   margin-top: 1rem;
 }
-.view{
-   padding: 5px 20px;
-   border:  2px solid #11446c;
-   text-decoration: none;
-   height: 50px;
-   text-align: center;
-   color: white;
-   font-size: 18px;
-  }
-  .view:hover{
-    background-color: white;
-    color: #11446c;
-  }
+.view {
+  padding: 10px 20px;
+  border: 2px solid #11446c;
+  border-radius: 30px;
+  text-decoration: none;
+  text-align: center;
+  color: white;
+  font-size: 21px;
+  transition: all 0.3s ease;
+}
+.view:hover{
+  background-color: white;
+  color: #11446c;
+}
 .btn {
   padding: 0.8rem 1.5rem;
   border-radius: 30px;
-  font-weight: 600;
+  font-weight: 400;
   text-decoration: none;
   transition: all 0.3s ease;
+  border: 2px solid var(--color-accent-alt);
+  color: var(--color-accent-alt);
+  background-color:#11446c;color: white; font-size: 20px;
 }
+.btn:hover {
+  background-color: white;
+  color: #11446c;
+}
+
 .btn-primary {
   background: var(--color-accent);
   color: #fff;
@@ -335,14 +344,7 @@ section.visible {
 .btn-primary:hover {
   background: #1d85c6;
 }
-.btn {
-  border: 2px solid var(--color-accent-alt);
-  color: var(--color-accent-alt);
-}
-.btn :hover {
-  background: var(--color-accent-alt);
-  color: #fff;
-}
+
 
 /* ===============================
    Responsive Design
