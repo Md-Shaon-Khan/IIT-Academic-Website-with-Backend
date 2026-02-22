@@ -47,6 +47,7 @@ section {
   opacity: 0;
   transform: translateY(60px); /* slightly more slide */
   transition: opacity 1.5s ease, transform 1.5s ease;
+  scroll-margin-top: 80px; /*navbar height*/
 }
 
 /* When section is visible */
