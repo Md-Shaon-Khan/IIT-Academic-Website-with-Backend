@@ -56,6 +56,28 @@ section.visible {
   transform: translateY(0);
 }
 
+@keyframes gradientSwipe {
+  0%   { background-position: 0% 50%; opacity: 1; }
+  100% { background-position: 200% 50%; opacity: 0; }
+}
+
+#explore::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(-120deg, white, white, #333c50, white, white, white);
+  background-size: 200% 200%;
+  opacity: 0.8;
+  z-index: 0;
+  filter: blur(2px);
+
+  /* no animation by default */
+}
+
+#explore.animate::before {
+  animation: gradientSwipe 6s ease forwards;
+}
 
 /* ===============================
    Skip Link (Accessibility)

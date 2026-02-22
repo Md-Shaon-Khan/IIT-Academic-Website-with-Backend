@@ -70,3 +70,17 @@ document.addEventListener("DOMContentLoaded", () => {
   observer.observe(aboutSection);
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+  const explore = document.querySelector("#explore");
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        explore.classList.add("animate");
+        observer.unobserve(explore); // run only once
+      }
+    });
+  }, { threshold: 0.3 }); // trigger when 30% visible
+
+  observer.observe(explore);
+});
