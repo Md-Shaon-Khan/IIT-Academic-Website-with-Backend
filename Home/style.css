@@ -344,7 +344,19 @@ section.visible {
 .btn-primary:hover {
   background: #1d85c6;
 }
-
+#explore-btn{
+  padding: 0.8rem 1.5rem;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: 2px solid var(--color-accent-alt);
+  color: var(--color-accent-alt);
+  background-color: transparent; color: black; font-size: 20px;
+}
+#explore-btn:hover {
+  background-color: black;
+  color: white;
+}
 
 /* ===============================
    Responsive Design
