@@ -55,7 +55,7 @@
 
             if (response.ok) {
                 localStorage.setItem("admin_token", data.access_token);
-                window.location.href = "../dummy-page/upload-choice.html"; //Raunaq upload page
+                window.location.href = "../upload(question&project)/upload-choice.html"; //Raunaq upload page
             } else {
                 alert(data.detail || JSON.stringify(data));
             }
