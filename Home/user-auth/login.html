@@ -27,6 +27,9 @@
             </div>
 
             <button type="submit">Login</button>
+            <div id="logToSign">
+                <a href="signup.html">Haven't signed up yet?</a>
+            </div>
         </form>
     </div>
 
@@ -52,7 +55,7 @@
 
             if (response.ok) {
                 localStorage.setItem("admin_token", data.access_token);
-                window.location.href = "admin-upload.html";
+                window.location.href = "../dummy-page/admin-upload.html"; //Raunaq upload page
             } else {
                 alert(data.detail || JSON.stringify(data));
             }

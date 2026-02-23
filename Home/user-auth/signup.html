@@ -7,7 +7,7 @@
 </head>
 <body>
 <div class="card">
-    <h2>Admin Signup</h2>
+    <h2>Signup</h2>
     <p class="subtitle">Only authorized emails can register.</p>
 
     <div class="step-indicator">
@@ -19,9 +19,12 @@
     <div id="step1">
         <div class="input-group">
             <input type="email" id="email" required>
-            <label>Work Email</label>
+            <label>Email</label>
         </div>
         <button id="sendOtpBtn" onclick="sendOTP()">Send Verification Code</button>
+        <div id="signToLog">
+                <a href="login.html">Already signed up?</a>
+        </div>
     </div>
 
     <!-- STEP 2 -->

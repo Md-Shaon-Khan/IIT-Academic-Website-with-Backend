@@ -100,3 +100,10 @@ button {
 button:hover {
     transform: scale(1.05);
 }
+
+#logToSign, #logToSign a{
+    padding-top: 10px;
+    color: #14468b;
+    font-size: small;
+    font-style: italic;
+}
