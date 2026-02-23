@@ -4,14 +4,24 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy import or_ 
 import shutil, os, uuid
-from . import models, database
+import models, database
+
+from database import SessionLocal, engine, get_db
+from auth import verify_password, create_token, hash_password
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import jwt
+from auth import SECRET_KEY, ALGORITHM
+from mailer import send_otp_email
+from datetime import datetime, timedelta
+import secrets
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
+    allow_origins=["http://127.0.0.1:5502", "http://localhost:5502"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -20,6 +30,19 @@ models.Base.metadata.create_all(bind=database.engine)
 if not os.path.exists("uploads"):
     os.makedirs("uploads")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+
+
+security = HTTPBearer()
+
+def verify_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except:
+        raise HTTPException(status_code=403, detail="Invalid or expired token")
 
 # --- ENDPOINTS ---
 
@@ -130,3 +153,134 @@ async def delete_project(project_id: int, db: Session = Depends(database.get_db)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+    # ── Step 1: Check email & send OTP ──────────────────────────────
+@app.post("/auth/request-otp")
+def request_otp(email: str = Form(...), db: Session = Depends(get_db)):
+
+    allowed = db.query(models.AllowedEmail).filter(
+        models.AllowedEmail.email == email,
+        models.AllowedEmail.is_registered == False
+    ).first()
+
+    if not allowed:
+        raise HTTPException(status_code=403, detail="This email is not authorized or already has an account.")
+
+    otp = str(secrets.randbelow(900000) + 100000)
+    expires_at = datetime.utcnow() + timedelta(minutes=10)
+
+    # Try sending email FIRST before touching the DB
+    try:
+        send_otp_email(email, otp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send OTP: {str(e)}")
+
+    # Only save to DB if email succeeded
+    db.query(models.EmailOTP).filter(models.EmailOTP.email == email).delete()
+    db.add(models.EmailOTP(email=email, otp=otp, expires_at=expires_at))
+    db.commit()
+
+    return {"message": "OTP sent to your email."}
+
+
+# ── Step 2: Verify OTP + create account ─────────────────────────
+@app.post("/auth/signup")
+def signup(
+    email: str = Form(...),
+    otp: str = Form(...),
+    username: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    # Validate OTP
+    otp_record = db.query(models.EmailOTP).filter(
+        models.EmailOTP.email == email,
+        models.EmailOTP.otp == otp,
+        models.EmailOTP.used == False,
+        models.EmailOTP.expires_at > datetime.utcnow()
+    ).first()
+
+    if not otp_record:
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP.")
+
+    # Create admin account
+    hashed = hash_password(password)
+    new_admin = models.Admin(username=username, email=email, password=hashed)
+    db.add(new_admin)
+
+    # Mark OTP used & email as registered
+    otp_record.used = True
+    db.query(models.AllowedEmail).filter(
+        models.AllowedEmail.email == email
+    ).update({"is_registered": True})
+
+    db.commit()
+
+    return {"message": "Account created successfully! You can now log in."}
+
+
+# ── Utility: Add allowed email (call this manually or via a protected route) ─
+@app.post("/admin/allow-email")
+def allow_email(
+    email: str = Form(...),
+    db: Session = Depends(get_db),
+    admin: dict = Depends(verify_admin)   # only existing admins can whitelist
+):
+    existing = db.query(models.AllowedEmail).filter(
+        models.AllowedEmail.email == email
+    ).first()
+
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already in the list.")
+
+    db.add(models.AllowedEmail(email=email))
+    db.commit()
+
+    return {"message": f"{email} added to allowed list."}
+    
+# ---------------- ADMIN create ----------------
+@app.post("/admin/create")
+def create_admin(username: str = Form(...),
+                 email: str = Form(...),
+                 password: str = Form(...),
+                 db: Session = Depends(get_db)):
+
+    hashed = hash_password(password)
+
+    admin = models.Admin(
+        username=username,
+        email=email,
+        password=hashed
+    )
+
+    db.add(admin)
+    db.commit()
+
+    return {"message": "Admin created"}
+
+# ---------------- ADMIN LOGIN ----------------
+@app.post("/admin/login")
+def admin_login(
+    username: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    admin = db.query(models.Admin).filter(
+        models.Admin.email == email,
+        models.Admin.username == username
+    ).first()
+
+    if not admin:
+        raise HTTPException(status_code=400, detail="Admin not found")
+
+    if not verify_password(password, admin.password):
+        raise HTTPException(status_code=400, detail="Wrong password")
+
+    token = create_token({"sub": admin.email, "username": admin.username})
+
+    return {
+        "message": "Login successful",
+        "access_token": token
+    }

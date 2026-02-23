@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean
 from datetime import datetime
-from .database import Base
+from database import Base
 
 class Project(Base):
     __tablename__ = "projects"
@@ -24,3 +24,27 @@ class ProjectImage(Base):
     id = Column(Integer, primary_key=True, index=True)
     project_id = Column(Integer, ForeignKey("projects.id"))
     image_path = Column(String(255))
+
+
+class AllowedEmail(Base):
+    __tablename__ = "allowed_emails"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, nullable=False)
+    is_registered = Column(Boolean, default=False)
+
+class EmailOTP(Base):
+    __tablename__ = "email_otps"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, nullable=False)
+    otp = Column(String(6), nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    used = Column(Boolean, default=False)
+
+# ---------------- admin ----------------
+class Admin(Base):
+    __tablename__ = "admin"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(100), unique=True)
+    email = Column(String(150), unique=True)
+    password = Column(String(255))

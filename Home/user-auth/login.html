@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+
+    <div class="login-container">
+        <form class="login-box" id="loginForm">
+            <h2>Login</h2>
+
+            <div class="input-group">
+                <input type="text" name="username" required>
+                <label>Username</label>
+            </div>
+
+            <div class="input-group" >
+                <input type="email" name="email" required>
+                <label>Email</label>
+            </div>
+
+            <div class="input-group">
+                <input type="password" name="password" required>
+                <label>Password</label>
+            </div>
+
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+</body>
+
+<script>
+    document.getElementById("loginForm").addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+
+        try {
+            const response = await fetch("http://127.0.0.1:8000/admin/login", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "Accept": "application/json"
+                }
+
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                localStorage.setItem("admin_token", data.access_token);
+                window.location.href = "admin-upload.html";
+            } else {
+                alert(data.detail || JSON.stringify(data));
+            }
+        } catch (err) {
+            console.error("Login error:", err);
+            alert("Could not connect to server");
+        }
+    });
+</script>
+
+</html>
