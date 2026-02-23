@@ -19,13 +19,6 @@ from database import SessionLocal, engine, get_db
 from auth import verify_password, create_token, hash_password, SECRET_KEY, ALGORITHM
 from mailer import send_otp_email
 
-# import database_model_ques
-# import database_model_project
-# import database_model_fques
-# from database_model_fques import Final_question
-# from database_model_ques import TutorialQuestion
-#  from config import SessionLocal as QSessionLocal, engine as QEngine
-
 # ─────────────────────────────────────────────
 #  APP SETUP
 # ─────────────────────────────────────────────
@@ -41,9 +34,6 @@ app.add_middleware(
 
 # Create all tables
 models.Base.metadata.create_all(bind=database.engine)
-# database_model_ques.Base.metadata.create_all(bind=QEngine)
-# database_model_project.Base.metadata.create_all(bind=QEngine)
-# database_model_fques.Base.metadata.create_all(bind=QEngine)
 
 # Uploads folder
 UPLOAD_FOLDER = "uploads"
@@ -168,6 +158,11 @@ async def upload_project(
 @app.get("/get-projects/{batch_id}")
 def get_projects(batch_id: str, db: Session = Depends(get_db)):
     return db.query(models.Project).filter(models.Project.batch == batch_id).all()
+
+
+@app.get("/get-all-projects/")
+def get_all_projects(db: Session = Depends(get_db)):
+    return db.query(models.Project).all()
 
 
 @app.get("/search-projects/")
