@@ -142,6 +142,39 @@
       </h2>
 
       <form id="uploadForm" enctype="multipart/form-data">
+        <div class="verify-card shadow-sm">
+          <h6 class="mb-3 text-uppercase small fw-bold">
+            <i class="fas fa-shield-alt me-2"></i>Security Check
+          </h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="input-group">
+                <span class="input-group-text"
+                  ><i class="fas fa-envelope"></i
+                ></span>
+                <input
+                  type="email"
+                  id="adminEmail"
+                  class="form-control"
+                  placeholder="Admin Email"
+                  required
+                />
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-key"></i></span>
+                <input
+                  type="password"
+                  id="adminPass"
+                  class="form-control"
+                  placeholder="Admin Password"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div class="row g-4">
           <div class="col-md-4">
@@ -297,7 +330,13 @@
     <script>
       document.getElementById("uploadForm").onsubmit = async (e) => {
         e.preventDefault();
-      
+        if (
+          document.getElementById("adminEmail").value !== "admin@gmail.com" ||
+          document.getElementById("adminPass").value !== "iitju123"
+        ) {
+          alert("🔒 Access Denied: Incorrect Admin Credentials.");
+          return;
+        }
         const formData = new FormData(e.target);
         try {
           const response = await fetch(
