@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // ১. Navbar এবং Footer লোড করা
     fetch('navbar.html')
         .then(res => res.text())
         .then(data => {
@@ -69,6 +70,7 @@ async function performGlobalSearch() {
     }
 }
 
+// কার্ড রেন্ডার করার ফাংশন
 function displayProjects(projects) {
     const container = document.getElementById("projects-container");
     const API_BASE = "http://127.0.0.1:8000";
@@ -80,6 +82,7 @@ function displayProjects(projects) {
     }
 
     projects.forEach(p => {
+        // Windows এবং Linux পাথ ফরম্যাট হ্যান্ডেল করা
         const imgPath = p.image_path.replace(/\\/g, '/');
         
         container.innerHTML += `
@@ -95,6 +98,9 @@ function displayProjects(projects) {
                                 <p class="small mb-1 text-secondary"><strong>Supervisor:</strong> ${p.supervisor}</p>
                                 <div class="d-flex gap-2 mt-2">
                                     <a href="project_details.html?id=${p.id}" class="btn btn-primary btn-sm px-4" style="border-radius: 20px; background-color: #11446c; border: none;">Details</a>
+                                    <button onclick="confirmDelete(${p.id})" class="btn btn-outline-danger btn-sm px-3" style="border-radius: 20px;">
+                                        <i class="fa fa-trash"></i> Delete
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -105,4 +111,28 @@ function displayProjects(projects) {
                 </div>
             </div>`;
     });
+}
+
+async function confirmDelete(projectId) {
+    const password = prompt("Admin access required. Enter Password to delete:");
+    
+    if (password === "iitju123") {
+        if (confirm("Are you sure you want to delete this project?")) {
+            const API_BASE = "http://127.0.0.1:8000";
+            try {
+                const res = await fetch(`${API_BASE}/delete-project/${projectId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    alert("Project deleted successfully!");
+                    const card = document.getElementById(`project-card-${projectId}`);
+                    if(card) card.remove(); 
+                } else {
+                    alert("Failed to delete.");
+                }
+            } catch (e) {
+                console.error("Delete Error:", e);
+            }
+        }
+    } else if (password !== null) {
+        alert("Incorrect Password!");
+    }
 }

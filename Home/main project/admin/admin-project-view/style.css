@@ -1,0 +1,170 @@
+/* --- Global Layout & Sticky Footer --- */
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+/* লোগোকে বামে সরানো এবং বড় করা */
+.navbar-brand img {
+  height: 58px !important; /* লোগোর সাইজ বাড়ানো হয়েছে */
+  margin-left: -12px !important; /* লোগোকে বামে সরানো হয়েছে */
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.navbar-brand:hover img {
+  transform: scale(1.05);
+}
+
+/* নিশ্চিত করতে যে কন্টেইনারের প্যাডিং লোগোকে আটকে না রাখে */
+.navbar > .container {
+  padding-left: 0px !important;
+}
+
+body {
+  background-color: #f8fafd;
+  display: flex;
+  flex-direction: column;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* মেইন কন্টেন্ট যতটুকু জায়গা খালি আছে তা দখল করবে */
+main,
+.container.py-5 {
+  flex: 1 0 auto;
+  padding-top: 80px; /* Navbar এর জন্য স্পেস */
+}
+
+#footer-placeholder {
+  flex-shrink: 0;
+}
+
+/* --- Navbar & Search Styling --- */
+.navbar {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(5px);
+}
+
+#globalSearchInput {
+  border-radius: 20px 0 0 20px;
+  border: 1px solid #ddd;
+  padding-left: 20px;
+  transition: all 0.3s ease;
+}
+
+#globalSearchInput:focus {
+  box-shadow: none;
+  border-color: #11446c;
+}
+
+.input-group .btn-primary {
+  border-radius: 0 20px 20px 0;
+  padding: 0 25px;
+  background-color: #11446c;
+}
+
+/* --- Typography & Accents --- */
+.section-title {
+  color: #11446c;
+  font-weight: 800;
+}
+
+.title-underline {
+  width: 60px;
+  height: 4px;
+  background: #11446c;
+  border: none;
+  opacity: 1;
+  border-radius: 10px;
+  margin-top: 5px;
+}
+
+/* --- Project Card Styling --- */
+.project-card {
+  border: none;
+  border-radius: 15px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+  background: rgba(
+    255,
+    255,
+    255,
+    0.9
+  ); /* Slightly transparent white for readability */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* PROJECT NAME COLOR CHANGE HERE */
+.project-card h5 {
+  color: #11446c !important; /* Updated to your requested color */
+  font-weight: 700;
+}
+
+.project-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+}
+
+.project-card img {
+  transition: transform 0.5s ease;
+}
+
+.project-card:hover img {
+  transform: scale(1.05);
+}
+
+/* --- Buttons --- */
+.btn-primary {
+  background-color: #11446c;
+  border: none;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.btn-primary:hover {
+  background-color: #0d3452;
+}
+
+/* --- Footer --- */
+footer {
+  background-color: #1a1a1a;
+  color: #ffffff;
+  padding: 25px 0;
+  text-align: center;
+}
+
+.footer-wrapper p {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* --- Animation --- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#projects-container .col-md-6 {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+/* প্রজেক্ট কার্ডের মেইন হেডিং (Project Title) ফিক্স */
+.project-card .fw-bold.text-primary,
+.project-card h5 {
+  color: #11446c !important; /* এটি বুটস্ট্র্যাপের ব্লু কালারকে ওভাররাইড করবে */
+  text-shadow: none !important; /* যদি শ্যাডো থাকে তবে তা রিমুভ করবে */
+}
+
+/* হোভার করলে কালার সামান্য পরিবর্তন (ঐচ্ছিক) */
+.project-card:hover h5 {
+  color: #0d3452 !important;
+}
