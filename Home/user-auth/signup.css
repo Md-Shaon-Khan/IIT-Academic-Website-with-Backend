@@ -130,10 +130,3 @@ button:disabled { background: #a5b4fc; cursor: not-allowed; }
 }
 
 #timer span { color: #ef4444; font-weight: bold; }
-
-#signToLog, #signToLog a{
-    padding-top: 10px;
-    color: #ffffff;
-    font-size: small;
-    font-style: italic;
-}
