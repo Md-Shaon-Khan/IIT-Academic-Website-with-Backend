@@ -13,16 +13,18 @@ import shutil, os, uuid, secrets
 # --- Your existing modules (keep all of these as-is) ---
 import models
 import database
+from models import Final_question
+from models import TutorialQuestion
 from database import SessionLocal, engine, get_db
 from auth import verify_password, create_token, hash_password, SECRET_KEY, ALGORITHM
 from mailer import send_otp_email
 
-import database_model_ques
-import database_model_project
-import database_model_fques
-from database_model_fques import Final_question
-from database_model_ques import TutorialQuestion
-from config import SessionLocal as QSessionLocal, engine as QEngine
+# import database_model_ques
+# import database_model_project
+# import database_model_fques
+# from database_model_fques import Final_question
+# from database_model_ques import TutorialQuestion
+#  from config import SessionLocal as QSessionLocal, engine as QEngine
 
 # ─────────────────────────────────────────────
 #  APP SETUP
@@ -39,9 +41,9 @@ app.add_middleware(
 
 # Create all tables
 models.Base.metadata.create_all(bind=database.engine)
-database_model_ques.Base.metadata.create_all(bind=QEngine)
-database_model_project.Base.metadata.create_all(bind=QEngine)
-database_model_fques.Base.metadata.create_all(bind=QEngine)
+# database_model_ques.Base.metadata.create_all(bind=QEngine)
+# database_model_project.Base.metadata.create_all(bind=QEngine)
+# database_model_fques.Base.metadata.create_all(bind=QEngine)
 
 # Uploads folder
 UPLOAD_FOLDER = "uploads"
@@ -53,7 +55,7 @@ app.mount("/uploads", StaticFiles(directory=UPLOAD_FOLDER), name="uploads")
 #  DB DEPENDENCY FOR QUESTIONS APP
 # ─────────────────────────────────────────────
 def get_qdb():
-    db = QSessionLocal()
+    db = SessionLocal()
     try:
         yield db
     finally:

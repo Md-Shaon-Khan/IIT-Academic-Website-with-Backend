@@ -4,17 +4,36 @@
     <meta charset="UTF-8">
     <title>Upload Choice</title>
     <link rel="stylesheet" href="upload-choice.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
 <body>
 
     <div class="main-card">
-        <h1>Which would you like to upload?</h1>
+        <p class="eyebrow">Admin Panel</p>
+        <h1>What would you like to upload?</h1>
+        <div class="divider"></div>
 
         <div class="options">
-            <a href="project-form.html" class="option">📊 Project</a>
-            <a href="question-form.html" class="option">📚 Question Bank</a>
+            <a href="../main project/admin/upload.html" class="option">
+                <span class="option-icon">📊</span>
+                Project
+                <i class="option-arrow">→</i>
+            </a>
+            <a href="question-form.html" class="option">
+                <span class="option-icon">📚</span>
+                Question Bank
+                <i class="option-arrow">→</i>
+            </a>
         </div>
+
+        <a href="../user-auth/login.html" class="back-btn">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M8.5 2.5L4 7l4.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Back to Login page
+        </a>
     </div>
 
 </body>
+
 </html>
