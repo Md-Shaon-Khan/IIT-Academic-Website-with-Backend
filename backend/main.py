@@ -1,37 +1,89 @@
 from fastapi import FastAPI, Depends, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy.orm import Session
-from sqlalchemy import or_ 
-import shutil, os, uuid
-import models, database
-
-from database import SessionLocal, engine, get_db
-from auth import verify_password, create_token, hash_password
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.orm import Session
+from sqlalchemy import or_
+from pydantic import BaseModel
+from typing import List, Optional
 from jose import jwt
-from auth import SECRET_KEY, ALGORITHM
-from mailer import send_otp_email
 from datetime import datetime, timedelta
-import secrets
+import shutil, os, uuid, secrets
 
+# --- Your existing modules (keep all of these as-is) ---
+import models
+import database
+from models import Final_question
+from models import TutorialQuestion
+from database import SessionLocal, engine, get_db
+from auth import verify_password, create_token, hash_password, SECRET_KEY, ALGORITHM
+from mailer import send_otp_email
+
+# ─────────────────────────────────────────────
+#  APP SETUP
+# ─────────────────────────────────────────────
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5502", "http://localhost:5502"],
+    allow_origins=["http://127.0.0.1:5502", "http://localhost:5502", "*"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
+# Create all tables
 models.Base.metadata.create_all(bind=database.engine)
 
-if not os.path.exists("uploads"):
-    os.makedirs("uploads")
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+# Uploads folder
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_FOLDER), name="uploads")
 
 
+# ─────────────────────────────────────────────
+#  DB DEPENDENCY FOR QUESTIONS APP
+# ─────────────────────────────────────────────
+def get_qdb():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+# ─────────────────────────────────────────────
+#  PYDANTIC SCHEMAS (Questions App)
+# ─────────────────────────────────────────────
+class TutorialOut(BaseModel):
+    id: int
+    course_id: int
+    batch: int
+    tutorial_number: int
+    content: str
+
+    class Config:
+        from_attributes = True
+
+
+class FinalOut(BaseModel):
+    id: int
+    course_id: int
+    batch: int
+    content: str
+
+    class Config:
+        from_attributes = True
+
+
+class AllQuestionsResponse(BaseModel):
+    tutorial: List[TutorialOut]
+    final: List[FinalOut]
+
+
+# ─────────────────────────────────────────────
+#  AUTH HELPERS (Project App)
+# ─────────────────────────────────────────────
 security = HTTPBearer()
 
 def verify_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -43,22 +95,28 @@ def verify_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
         raise HTTPException(status_code=403, detail="Invalid or expired token")
 
 
+# ═════════════════════════════════════════════
+#  ENDPOINTS — PROJECT APP
+# ═════════════════════════════════════════════
+
 @app.post("/upload-project/")
 async def upload_project(
+    batch: str = Form(...),
+    name: str = Form(...),
     batch: str = Form(...),
     course_id: int = Form(...),         # renamed from course -> course_id
     name: str = Form(...), 
     intro: str = Form(...),
-    problem: str = Form(...), 
-    features: str = Form(...), 
+    problem: str = Form(...),
+    features: str = Form(...),
     tools: str = Form(...),
-    impact: str = Form(...), 
-    supervisor: str = Form(...), 
+    impact: str = Form(...),
+    supervisor: str = Form(...),
     team: str = Form(...),
     github_link: str = Form(None),
-    image: UploadFile = File(...), 
-    related_images: list[UploadFile] = File(None), 
-    db: Session = Depends(database.get_db)
+    image: UploadFile = File(...),
+    related_images: list[UploadFile] = File(None),
+    db: Session = Depends(get_db)
 ):
     try:
         ext = image.filename.split(".")[-1]
@@ -69,14 +127,16 @@ async def upload_project(
 
         new_project = models.Project(
             batch=batch,
+            project_name=name,
+            batch=batch,
             course_id=course_id,        # renamed from course -> course_id
             project_name=name, 
             introduction=intro,
-            problem_statement=problem, 
-            features=features, 
+            problem_statement=problem,
+            features=features,
             tools_tech=tools,
-            impact=impact, 
-            supervisor=supervisor, 
+            impact=impact,
+            supervisor=supervisor,
             team_members=team,
             image_path=cover_path,
             github_link=github_link
@@ -102,26 +162,30 @@ async def upload_project(
 
 
 @app.get("/get-projects/{batch_id}")
-def get_projects(batch_id: str, db: Session = Depends(database.get_db)):
+def get_projects(batch_id: str, db: Session = Depends(get_db)):
     return db.query(models.Project).filter(models.Project.batch == batch_id).all()
 
 
+@app.get("/get-all-projects/")
+def get_all_projects(db: Session = Depends(get_db)):
+    return db.query(models.Project).all()
+
+
 @app.get("/search-projects/")
-def search_projects(query: str, db: Session = Depends(database.get_db)):
+def search_projects(query: str, db: Session = Depends(get_db)):
     search_query = f"%{query}%"
     results = db.query(models.Project).filter(
         or_(
             models.Project.project_name.ilike(search_query),
             models.Project.introduction.ilike(search_query),
-            models.Project.batch.ilike(search_query),
-            # course_id removed — integer columns don't support ilike
+            models.Project.batch.ilike(search_query)
         )
     ).all()
     return results
 
 
 @app.get("/get-project-detail/{project_id}")
-def get_detail(project_id: int, db: Session = Depends(database.get_db)):
+def get_detail(project_id: int, db: Session = Depends(get_db)):
     project = db.query(models.Project).filter(models.Project.id == project_id).first()
     images = db.query(models.ProjectImage).filter(models.ProjectImage.project_id == project_id).all()
     if not project:
@@ -130,7 +194,7 @@ def get_detail(project_id: int, db: Session = Depends(database.get_db)):
 
 
 @app.delete("/delete-project/{project_id}")
-async def delete_project(project_id: int, db: Session = Depends(database.get_db)):
+async def delete_project(project_id: int, db: Session = Depends(get_db)):
     project = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -150,6 +214,7 @@ async def delete_project(project_id: int, db: Session = Depends(database.get_db)
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ── Auth: OTP ──────────────────────────────────────────────────────
 @app.post("/auth/request-otp")
 def request_otp(email: str = Form(...), db: Session = Depends(get_db)):
     allowed = db.query(models.AllowedEmail).filter(
@@ -161,6 +226,7 @@ def request_otp(email: str = Form(...), db: Session = Depends(get_db)):
 
     otp = str(secrets.randbelow(900000) + 100000)
     expires_at = datetime.utcnow() + timedelta(minutes=10)
+
     try:
         send_otp_email(email, otp)
     except Exception as e:
@@ -206,9 +272,7 @@ def allow_email(
     db: Session = Depends(get_db),
     admin: dict = Depends(verify_admin)
 ):
-    existing = db.query(models.AllowedEmail).filter(
-        models.AllowedEmail.email == email
-    ).first()
+    existing = db.query(models.AllowedEmail).filter(models.AllowedEmail.email == email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already in the list.")
     db.add(models.AllowedEmail(email=email))
@@ -217,10 +281,12 @@ def allow_email(
 
 
 @app.post("/admin/create")
-def create_admin(username: str = Form(...),
-                 email: str = Form(...),
-                 password: str = Form(...),
-                 db: Session = Depends(get_db)):
+def create_admin(
+    username: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
     hashed = hash_password(password)
     admin = models.Admin(username=username, email=email, password=hashed)
     db.add(admin)
@@ -245,3 +311,60 @@ def admin_login(
         raise HTTPException(status_code=400, detail="Wrong password")
     token = create_token({"sub": admin.email, "username": admin.username})
     return {"message": "Login successful", "access_token": token}
+
+
+# ═════════════════════════════════════════════
+#  ENDPOINTS — QUESTIONS APP
+# ═════════════════════════════════════════════
+
+@app.post("/upload-final/")
+async def upload_final_question(
+    question_type: str = Form(...),
+    course_id: int = Form(...),
+    batch: int = Form(...),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_qdb)
+):
+    if question_type.strip().lower() != "final":
+        return {"error": "This endpoint only accepts Final Questions"}
+
+    file_location = f"{UPLOAD_FOLDER}/{file.filename}"
+    with open(file_location, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    db.add(Final_question(course_id=course_id, batch=batch, content=file_location))
+    db.commit()
+    return {"message": "Final question inserted successfully", "path": file_location}
+
+
+@app.post("/upload-tutorial/")
+async def upload_tutorial_question(
+    question_type: str = Form(...),
+    tutorial_number: int = Form(...),
+    course_id: int = Form(...),
+    batch: int = Form(...),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_qdb)
+):
+    if question_type.strip().lower() != "tutorial":
+        return {"error": "This endpoint only accepts Tutorial Questions"}
+
+    file_location = f"{UPLOAD_FOLDER}/{file.filename}"
+    with open(file_location, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    db.add(TutorialQuestion(
+        tutorial_number=tutorial_number,
+        course_id=course_id,
+        batch=batch,
+        content=file_location
+    ))
+    db.commit()
+    return {"message": "Tutorial question inserted successfully", "path": file_location}
+
+
+@app.get("/all-questions/", response_model=AllQuestionsResponse)
+def get_all_questions(course_id: int, db: Session = Depends(get_qdb)):
+    tutorials = db.query(TutorialQuestion).filter(TutorialQuestion.course_id == course_id).all()
+    finals = db.query(Final_question).filter(Final_question.course_id == course_id).all()
+    return {"tutorial": tutorials, "final": finals}

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload Question</title>
+    <link rel="stylesheet" href="question-form.css">
+</head>
+<body>
+
+<!-- ✅ Success Popup -->
+<div id="successPopup" style="
+  display:none;
+  position:fixed;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  background:#fff;
+  border-radius:12px;
+  padding:30px 40px;
+  text-align:center;
+  box-shadow:0 8px 30px rgba(0,0,0,0.2);
+  z-index:9999;
+">
+  <div style="font-size:50px;">✅</div>
+  <h3 style="margin:10px 0 5px;">Inserted Successfully!</h3>
+  <p style="color:#666;">Your question has been uploaded.</p>
+  <button onclick="document.getElementById('successPopup').style.display='none'" style="
+    margin-top:10px;
+    padding:8px 20px;
+    background:#28a745;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:14px;
+  ">OK</button>
+</div>
+
+<div class="form-container">
+    <h2 style="font-size: 25px;">Upload Question</h2>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <div class="form-group">
+            <label>Question Type</label>
+            <select id="questionType" name="question_type" onchange="handleTypeChange()" required>
+                <option value="">Select Type</option>
+                <option value="lab">Lab Question</option>
+                <option value="tutorial">Tutorial</option>
+                <option value="final">Final Question</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="numberField" style="display:none;">
+            <label id="numberLabel"></label>
+            <input type="number" id="questionNumber" name="tutorial_number">
+        </div>
+
+        <div class="form-group">
+            <label>Course ID</label>
+            <input type="text" name="course_id" required>
+        </div>
+
+        <div class="form-group">
+            <label>Batch</label>
+            <input type="text" name="batch" required>
+        </div>
+
+        <div class="form-group">
+            <label>Upload Question File</label>
+            <input type="file" name="file" required>
+        </div>
+
+        <button type="submit">Upload</button>
+    </form>
+</div>
+
+<script>
+    let uploadUrl = "#";
+
+    function handleTypeChange() {
+        const type = document.getElementById("questionType").value;
+        const numberField = document.getElementById("numberField");
+        const numberLabel = document.getElementById("numberLabel");
+        const numberInput = document.getElementById("questionNumber");
+
+        if (type === "tutorial") {
+            numberField.style.display = "block";
+            numberLabel.innerText = "Tutorial Number";
+            numberInput.required = true;
+            uploadUrl = "http://127.0.0.1:8000/upload-tutorial/";
+        } else if (type === "final") {
+            numberField.style.display = "none";
+            numberInput.required = false;
+            uploadUrl = "http://127.0.0.1:8000/upload-final/";
+        } else {
+            numberField.style.display = "none";
+            numberInput.required = false;
+            uploadUrl = "#";
+        }
+    }
+
+    document.getElementById("uploadForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        if (uploadUrl === "#") {
+            alert("❌ Please select a valid question type.");
+            return;
+        }
+
+        const formData = new FormData(this);
+
+        fetch(uploadUrl, {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.message) {
+                document.getElementById("successPopup").style.display = "block";
+                document.getElementById("uploadForm").reset();
+                handleTypeChange();
+            } else if (data.error) {
+                alert("❌ " + data.error);
+            }
+        })
+        .catch(err => {
+            alert("❌ Upload failed. Server not responding.");
+            console.error(err);
+        });
+    });
+</script>
+</body>
+</html>
