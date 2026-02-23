@@ -136,3 +136,8 @@ async function confirmDelete(projectId) {
         alert("Incorrect Password!");
     }
 }
+
+function logoutAdmin() {
+  localStorage.removeItem("admin_token");
+  window.location.href = "../../../user-auth/login.html";
+}
