@@ -103,9 +103,7 @@ def verify_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
 async def upload_project(
     batch: str = Form(...),
     name: str = Form(...),
-    batch: str = Form(...),
     course_id: int = Form(...),         # renamed from course -> course_id
-    name: str = Form(...), 
     intro: str = Form(...),
     problem: str = Form(...),
     features: str = Form(...),
@@ -126,8 +124,6 @@ async def upload_project(
             shutil.copyfileobj(image.file, buffer)
 
         new_project = models.Project(
-            batch=batch,
-            project_name=name,
             batch=batch,
             course_id=course_id,        # renamed from course -> course_id
             project_name=name, 
